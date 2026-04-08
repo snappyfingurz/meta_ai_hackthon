@@ -28,8 +28,9 @@ dependencies = [
     "fastapi==0.115.5",
     "uvicorn[standard]==0.32.1",
     "pydantic==2.10.3",
-    "openai==1.58.1",
+    "openai>=1.58.1",
     "requests==2.32.3",
+    "openenv-core>=0.2.0",
 ]
 
 [project.optional-dependencies]
@@ -37,6 +38,9 @@ dev = [
     "pytest>=7.4",
     "pytest-asyncio>=0.21",
 ]
+
+[project.scripts]
+email-triage-server = "server:main"
 
 [project.urls]
 Homepage = "https://github.com/openenv/email-triage"
