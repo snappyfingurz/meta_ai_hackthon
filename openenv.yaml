@@ -1,0 +1,76 @@
+name: email-triage
+version: "1.0.0"
+description: >
+  A real-world email triage environment where an AI agent must process an inbox,
+  categorize emails, set priorities, draft replies, and escalate critical items
+  such as security breaches, legal notices, and HR complaints.
+
+tags:
+  - openenv
+  - email
+  - triage
+  - nlp
+  - real-world
+
+author: OpenEnv RL Challenge Submission
+
+tasks:
+  - name: easy
+    description: "3 emails — clear urgent/spam/normal split, no escalation required"
+    difficulty: easy
+    max_steps: 20
+    reward_range: [0.0, 1.0]
+
+  - name: medium
+    description: "6 emails — mixed signals, one legal escalation required"
+    difficulty: medium
+    max_steps: 35
+    reward_range: [0.0, 1.0]
+
+  - name: hard
+    description: >
+      9 emails — security breach, phishing, harassment complaint, large wire transfer.
+      Must distinguish real alerts from phishing. Multiple escalations required.
+    difficulty: hard
+    max_steps: 50
+    reward_range: [0.0, 1.0]
+
+observation_space:
+  type: structured
+  fields:
+    inbox:
+      type: list[Email]
+      description: All emails in the inbox
+    current_email:
+      type: Email | null
+      description: The currently open email
+    actions_taken:
+      type: list[dict]
+      description: Summary of categorizations, drafts, escalations so far
+    step_number:
+      type: int
+    message:
+      type: str
+
+action_space:
+  type: structured
+  actions:
+    - open:        { email_id: str }
+    - categorize:  { email_id: str, category: "urgent|normal|spam" }
+    - prioritize:  { email_ids: list[str] }
+    - draft_reply: { email_id: str, subject: str, body: str }
+    - escalate:    { email_id: str, reason: str }
+    - done:        {}
+
+reward:
+  type: dense
+  description: >
+    Incremental rewards on each action (correct categorization +0.15,
+    correct escalation +0.15, open new email +0.02) plus a terminal bonus
+    proportional to final grader score and efficiency (fewer steps = larger bonus).
+  range: [0.0, 1.0]
+
+baseline_scores:
+  easy:   0.82
+  medium: 0.61
+  hard:   0.44
