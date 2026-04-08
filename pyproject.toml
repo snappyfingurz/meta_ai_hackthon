@@ -40,7 +40,7 @@ dev = [
 ]
 
 [project.scripts]
-email-triage-server = "server:main"
+server = "server:main"
 
 [project.urls]
 Homepage = "https://github.com/openenv/email-triage"
