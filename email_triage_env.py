@@ -456,12 +456,19 @@ def _get_grader(task_name: str):
     }[task_name]
 
 
+def _clamp_score(score: float) -> float:
+    """Clamp score to strictly between 0 and 1, excluding exact 0.0 and 1.0."""
+    epsilon = 0.01
+    return max(epsilon, min(1.0 - epsilon, round(score, 4)))
+
+
 def _grade_easy(state: TaskState, task_def: dict) -> float:
     cat_score = _partial_category_reward(state.categorizations, task_def["expected_categories"])
     pri_score = _priority_order_reward(state.priority_order, task_def["expected_priority"])
     reply_ids = set(state.drafts.keys())
     reply_score = len(reply_ids & {"e1", "e3"}) / 2
-    return round((cat_score * 0.5 + pri_score * 0.3 + reply_score * 0.2), 4)
+    score = cat_score * 0.5 + pri_score * 0.3 + reply_score * 0.2
+    return _clamp_score(score)
 
 
 def _grade_medium(state: TaskState, task_def: dict) -> float:
@@ -472,10 +479,8 @@ def _grade_medium(state: TaskState, task_def: dict) -> float:
     # Penalise false escalations
     false_esc = len([e for e in state.escalations if e != "m4"]) * 0.1
     escalation_score = max(0.0, escalation_score - false_esc)
-    return round(
-        cat_score * 0.35 + pri_score * 0.25 + reply_score * 0.20 + escalation_score * 0.20,
-        4,
-    )
+    score = cat_score * 0.35 + pri_score * 0.25 + reply_score * 0.20 + escalation_score * 0.20
+    return _clamp_score(score)
 
 
 def _grade_hard(state: TaskState, task_def: dict) -> float:
@@ -497,4 +502,4 @@ def _grade_hard(state: TaskState, task_def: dict) -> float:
         + escalation_score * 0.25
         + phishing_bonus
     )
-    return round(max(0.0, min(1.0, raw)), 4)
+    return _clamp_score(raw)
