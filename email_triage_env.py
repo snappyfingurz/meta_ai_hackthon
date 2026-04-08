@@ -181,11 +181,13 @@ class EmailTriageEnv:
         self._state = None
 
     def score(self) -> float:
-        """Final task score [0, 1]. Call after done=True."""
+        """Final task score in (0, 1) exclusive. Call after done=True."""
         if self._state is None:
             return 0.01
         grader = _get_grader(self.task_name)
-        return grader(self._state, self._task_def)
+        result = grader(self._state, self._task_def)
+        # Extra safety: ensure score is strictly in (0, 1)
+        return _clamp_score(result)
 
     # ── Action dispatch ───────────────────────────────────────────────────────
 
@@ -459,7 +461,13 @@ def _get_grader(task_name: str):
 def _clamp_score(score: float) -> float:
     """Clamp score to strictly between 0 and 1, excluding exact 0.0 and 1.0."""
     epsilon = 0.01
-    return max(epsilon, min(1.0 - epsilon, round(score, 4)))
+    clamped = max(epsilon, min(1.0 - epsilon, round(score, 4)))
+    # Final safety: ensure we never return exactly 0.0 or 1.0
+    if clamped <= 0.0:
+        return epsilon
+    if clamped >= 1.0:
+        return 1.0 - epsilon
+    return clamped
 
 
 def _grade_easy(state: TaskState, task_def: dict) -> float:

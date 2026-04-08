@@ -92,10 +92,21 @@ def close_env(session_id: str) -> None:
         pass
 
 
+def clamp_score(s: float) -> float:
+    """Ensure score is strictly in (0, 1) exclusive."""
+    epsilon = 0.01
+    clamped = max(epsilon, min(1.0 - epsilon, round(s, 4)))
+    if clamped <= 0.0:
+        return epsilon
+    if clamped >= 1.0:
+        return 1.0 - epsilon
+    return clamped
+
+
 def get_score(session_id: str) -> float:
     try:
         data = api_post("score", {"session_id": session_id})
-        return data.get("score", 0.01)
+        return clamp_score(data.get("score", 0.01))
     except Exception:
         return 0.01
 
@@ -148,6 +159,7 @@ def run_episode(task_name: str) -> dict:
     steps = 0
     success = False
     last_error = None
+    score = 0.01  # default score strictly in (0, 1)
 
     print(f"[START] task={task_name} env=email-triage model={MODEL_NAME}", flush=True)
 
@@ -197,13 +209,15 @@ def run_episode(task_name: str) -> dict:
         if session_id:
             close_env(session_id)
 
+    # Ensure score is always strictly in (0, 1)
+    score = clamp_score(score)
     rewards_str = ",".join(f"{r:.2f}" for r in rewards)
     success_str = "true" if success else "false"
     print(
-        f"[END] success={success_str} steps={steps} rewards={rewards_str}",
+        f"[END] success={success_str} steps={steps} score={score:.4f} rewards={rewards_str}",
         flush=True,
     )
-    return {"task": task_name, "success": success, "steps": steps, "rewards": rewards}
+    return {"task": task_name, "success": success, "steps": steps, "rewards": rewards, "score": score}
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
