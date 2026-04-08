@@ -95,9 +95,9 @@ def close_env(session_id: str) -> None:
 def get_score(session_id: str) -> float:
     try:
         data = api_post("score", {"session_id": session_id})
-        return data.get("score", 0.0)
+        return data.get("score", 0.01)
     except Exception:
-        return 0.0
+        return 0.01
 
 
 # ── LLM agent ────────────────────────────────────────────────────────────────

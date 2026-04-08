@@ -183,7 +183,7 @@ class EmailTriageEnv:
     def score(self) -> float:
         """Final task score [0, 1]. Call after done=True."""
         if self._state is None:
-            return 0.0
+            return 0.01
         grader = _get_grader(self.task_name)
         return grader(self._state, self._task_def)
 
