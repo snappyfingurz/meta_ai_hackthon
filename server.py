@@ -6,7 +6,7 @@ import uuid
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Body
 from pydantic import BaseModel
 
 from email_triage_env import Action, EmailTriageEnv
@@ -65,7 +65,7 @@ def health():
 
 
 @app.post("/reset")
-def reset(req: ResetRequest):
+def reset(req: ResetRequest = Body(default=ResetRequest())):
     session_id = str(uuid.uuid4())
     env = EmailTriageEnv(task_name=req.task_name)
     obs = env.reset()
